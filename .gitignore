@@ -1,0 +1,13 @@
+# Visual Studio 빌드 출력 디렉토리
+x64/
+Debug/
+Release/
+
+# 사용자 설정 파일
+*.user
+*.suo
+*.VC.db
+.vs/
+
+# 빌드 로그
+*.log
