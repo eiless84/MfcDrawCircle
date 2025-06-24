@@ -1,0 +1,55 @@
+#include <string>
+#include <vector>
+
+using namespace std;
+
+#define MAX_ARRAY 255
+
+int solution(vector<vector<int>> dots) {
+    int answer = 0;
+    int nCnt = 0;
+    int nHorizontal = 0; // 가로
+    for (vector<int> dotDatas : dots)
+    {
+        int nData = dotDatas.at(0); // 가로값
+        if (nHorizontal == 0)
+        {
+            nHorizontal = nData;
+        }
+        else if (nHorizontal != nData)
+        {
+            nHorizontal = abs(nHorizontal - nData);
+            break;
+        }
+        nCnt++;
+    }
+
+    nCnt = 0;
+    int nVertical = 0; // 세로
+    for (vector<int> dotDatas : dots)
+    {
+        int nData = dotDatas.at(1); // 세로값
+        if (nVertical == 0)
+        {
+            nVertical = nData;
+        }
+        else if (nVertical != nData)
+        {
+            nVertical = abs(nVertical - nData);
+            break;
+        }
+        nCnt++;
+    }
+
+    answer = nHorizontal * nVertical;
+    
+    char chBufResult[MAX_ARRAY] = { 0 };
+    snprintf(chBufResult, sizeof(chBufResult),
+        "좌표 [[%d,%d], [%d,%d], [%d,%d], [%d,%d]]를 꼭짓점으로 갖는 직사각형의 가로, 세로 길이는 각각 %d, %d이므로 직사각형의 넓이는 %d x %d = %d입니다.", 
+        dots[0].at(0), dots[0].at(1), dots[1].at(0), dots[1].at(1),
+        dots[2].at(0), dots[2].at(1), dots[3].at(0), dots[3].at(1),
+        nHorizontal, nVertical, nHorizontal, nVertical, answer);
+       
+    printf("%s", chBufResult);
+    return answer;
+}

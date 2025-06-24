@@ -1,0 +1,71 @@
+#include <string>
+#include <vector>
+
+using namespace std;
+
+void printVector(const vector<int> data)
+{
+    int nDataSize = data.size();
+    printf("[");
+    for (int i = 0; i < nDataSize; i++)
+    {
+        printf("%d", data.at(i));
+        if(i != nDataSize-1)
+            printf(", ");
+    }
+    printf("]\n");
+}
+
+vector<int> solution(vector<int> arr, vector<bool> flag) {
+    vector<int> answer;
+    
+    int nArrSize = static_cast<int>(arr.size());
+    int nFlagSize = static_cast<int>(flag.size());
+    
+    if (nArrSize != nFlagSize)
+    {
+        printf("두 배열의 사이즈가 다릅니다. 에러입니다!!");
+        return answer;
+    }
+    
+    if (nArrSize >= 1 && nArrSize <= 100)
+    {
+        int nArrayCount = 0;
+        //printf("i\tflag[i]\tarr[i]\tX\n\n");
+        for (int nArrayData : arr)
+        {
+            bool bFlag = flag.at(nArrayCount);
+            if (nArrayData >= 1 && nArrayData <= 9)
+            {
+                if (bFlag)
+                {
+                    for (int i = 0; i < nArrayData * 2; i++)
+                    {
+                        answer.push_back(nArrayData);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < nArrayData; i++)
+                    {
+                        answer.pop_back();
+                    }
+                }
+                //printf("%d\t%s\t%d\t", nArrayCount, bFlag ? "true" : "false", nArrayData);
+                //printVector(answer);
+            }
+            else
+            {
+                printf("배열의 값이 범위를 벗어납니다. 에러입니다!!");
+                return answer;
+            }
+            nArrayCount++;
+        }
+    }
+    else
+    {
+        printf("배열의 사이즈가 범위를 벗어납니다. 에러입니다!!");
+        return answer;
+    }    
+    return answer;
+}

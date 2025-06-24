@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
+#define MAX_ARRAY 255
+#define MAX_SHORT_ARRAY 50
+
+int serviceCount(int LambSkewers)
+{
+    return LambSkewers / 10;
+}
+
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+int solution(int n, int k) {
+    int answer = 0;
+    int nLambSkewers = n;
+    int nDrink = k;
+    int nPriceLambSkewers = 12000;
+    int nPriceDrink = 2000;
+    
+    int nServiceCount = serviceCount(nLambSkewers);
+    int nTotalDrink = max(nDrink, nServiceCount);
+
+    //cout << "양꼬치 : " << nLambSkewers << " 음료 : " << nDrink << endl;
+
+    if (nLambSkewers <= 0 && nLambSkewers >= 1000)
+    {
+        printf("잘못된 양꼬치 값을 입력하셨습니다.\n");
+        return answer;
+    }
+
+    if (nDrink >= nLambSkewers / 10 && nDrink >= 1000)
+    {
+        printf("잘못된 음료수 값을 입력하셨습니다.\n");
+        return answer;
+    }
+
+    char chBufService[MAX_SHORT_ARRAY] = { 0 };
+    if (nServiceCount == 1)
+    {
+        snprintf(chBufService, sizeof(chBufService), "%s", "서비스로 음료수를 하나 받아");
+    }
+    else if (nServiceCount > 1)
+    {
+        snprintf(chBufService, sizeof(chBufService), "서비스로 음료수를 %d개 받아", nServiceCount);
+    }
+
+    char chBufServiceForm[MAX_SHORT_ARRAY] = { 0 };
+    if (nServiceCount > 0)
+    {
+        snprintf(chBufServiceForm, sizeof(chBufServiceForm), " - %d * %d", nServiceCount, nPriceDrink);
+    }
+
+    int totalMoney = nLambSkewers * 12000 + nTotalDrink * 2000 - nServiceCount * 2000;
+    
+    char chBufResult[MAX_ARRAY] = { 0 };
+    snprintf(chBufResult, sizeof(chBufResult), 
+             "양꼬치를 %d 인분을 시켜 %s 총 %d * %d + %d * %d%s = %d원입니다.",
+             nLambSkewers, chBufService, nLambSkewers, nPriceLambSkewers, nTotalDrink, nPriceDrink, chBufServiceForm, totalMoney);
+    
+    printf("%s", chBufResult);
+    answer = totalMoney;
+    return answer;
+}

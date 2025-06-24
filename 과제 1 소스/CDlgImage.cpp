@@ -82,7 +82,7 @@ void CDlgImage::InitImage()
 
 void CDlgImage::ClearImage(bool bIsClearPoint)
 {
-	std::cout << "CELAR IMAGE \n";
+	//std::cout << "CELAR IMAGE \n";
 	int nWidth = m_Image.GetWidth();
 	int nHeight = m_Image.GetHeight();
 	int nBpp = 8;
@@ -139,7 +139,7 @@ void CDlgImage::OnMouseMove(UINT nFlags, CPoint point)
 		// 영역에 들어온 경우
 		if (dragPoint.x != ePOINT::ERROR_PT)
 		{
-			cout << "영역에 들어왔다!! 마우스 값 갱신해주기 " << endl;
+			//cout << "영역에 들어왔다!! 마우스 값 갱신해주기 " << endl;
 			ClearImage(false);
 			int nWidth = m_Image.GetWidth();
 			int nHeight = m_Image.GetHeight();
