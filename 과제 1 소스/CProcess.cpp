@@ -186,7 +186,7 @@ CPoint CProcess::isPointCheck(CPoint pos, int nRadiusSize)
 		if (isInCircle(pointData.x, pointData.y, pos.x, pos.y, nRadiusSize+2))
 		{
 			//cout << "isPointCheck TRUE : " << pointData.x << " , " << pointData.y << endl;
-			// 기존 값을 갱신해준다.
+			// 기존 값을 갱신해 줍니다.
 			pointData = pos;
 			return pointData;
 		}

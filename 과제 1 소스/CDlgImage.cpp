@@ -101,7 +101,7 @@ void CDlgImage::ClearImage(bool bIsClearPoint)
 
 void CDlgImage::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	// 마우스 클릭시 이동값을 저장합니다.
 	CStringA strPoint;
 	strPoint.Format(("마우스 클릭 위치: X = %d, Y = %d"), point.x, point.y);
 	cout << strPoint.GetString() << endl;
@@ -123,7 +123,6 @@ void CDlgImage::OnLButtonDown(UINT nFlags, CPoint point)
 
 void CDlgImage::OnLButtonUp(UINT nFlags, CPoint point)
 {
-	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
 	m_bDragging = false;
 
 	CDialogEx::OnLButtonUp(nFlags, point);
@@ -131,9 +130,10 @@ void CDlgImage::OnLButtonUp(UINT nFlags, CPoint point)
 
 void CDlgImage::OnMouseMove(UINT nFlags, CPoint point)
 {
-	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	// 마우스 이동입니다.
 	if (m_bDragging)
 	{
+		// 이 함수 내부에서 point값을 갱신해줍니다.
 		CPoint dragPoint = m_process.isPointCheck(point, m_process.GetRadiusSize());
 
 		// 영역에 들어온 경우
