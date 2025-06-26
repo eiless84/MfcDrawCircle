@@ -39,6 +39,14 @@ CMfcDrawCircleApp theApp;
 
 BOOL CMfcDrawCircleApp::InitInstance()
 {
+#ifdef _DEBUG
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
+#ifdef _DEBUG
+	//_CrtSetBreakAlloc(809);  // 42는 Output에 나온 블록 번호
+#endif
+
 	// Windows XP에서는 InitCommonControlsEx()를 필요로 합니다.
 	// 사용하도록 지정하는 경우, Windows XP 상에서 반드시 InitCommonControlsEx()가 필요합니다.
 	// InitCommonControlsEx()를 사용하지 않으면 창을 만들 수 없습니다.
@@ -71,21 +79,21 @@ BOOL CMfcDrawCircleApp::InitInstance()
 	CMfcDrawCircleDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
-	//if (nResponse == IDOK)
-	//{
-	//	// TODO: 여기에 [확인]을 클릭하여 대화 상자가 없어질 때 처리할
-	//	//  코드를 배치합니다.
-	//}
-	//else if (nResponse == IDCANCEL)
-	//{
-	//	// TODO: 여기에 [취소]를 클릭하여 대화 상자가 없어질 때 처리할
-	//	//  코드를 배치합니다.
-	//}
-	//else if (nResponse == -1)
-	//{
-	//	TRACE(traceAppMsg, 0, "경고: 대화 상자를 만들지 못했으므로 애플리케이션이 예기치 않게 종료됩니다.\n");
-	//	TRACE(traceAppMsg, 0, "경고: 대화 상자에서 MFC 컨트롤을 사용하는 경우 #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS를 수행할 수 없습니다.\n");
-	//}
+	if (nResponse == IDOK)
+	{
+		// TODO: 여기에 [확인]을 클릭하여 대화 상자가 없어질 때 처리할
+		//  코드를 배치합니다.
+	}
+	else if (nResponse == IDCANCEL)
+	{
+		// TODO: 여기에 [취소]를 클릭하여 대화 상자가 없어질 때 처리할
+		//  코드를 배치합니다.
+	}
+	else if (nResponse == -1)
+	{
+		TRACE(traceAppMsg, 0, "경고: 대화 상자를 만들지 못했으므로 애플리케이션이 예기치 않게 종료됩니다.\n");
+		TRACE(traceAppMsg, 0, "경고: 대화 상자에서 MFC 컨트롤을 사용하는 경우 #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS를 수행할 수 없습니다.\n");
+	}
 
 	// 위에서 만든 셸 관리자를 삭제합니다.
 	if (pShellManager != nullptr)

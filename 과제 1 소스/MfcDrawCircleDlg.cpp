@@ -9,6 +9,9 @@
 #include "afxdialogex.h"
 
 #ifdef _DEBUG
+
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
 #define new DEBUG_NEW
 #ifdef UNICODE // 유니코드일 경우
 #pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
@@ -138,6 +141,9 @@ BOOL CMfcDrawCircleDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// 큰 아이콘을 설정합니다.
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
+	//
+	
+
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
 	MoveWindow(0, 0, ePARENT::FULL_WIDTH, ePARENT::FULL_HEIGHT);
 
@@ -148,6 +154,8 @@ BOOL CMfcDrawCircleDlg::OnInitDialog()
 
 	// 콘솔창 릭 수정
 	SetConsoleCtrlHandler(ConsoleHandler, TRUE);
+
+	
 	
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -209,7 +217,7 @@ void CMfcDrawCircleDlg::OnBnClickedBtnRadiusOk()
 	m_pDlgImage->m_process.SetRadiusSize(nRadiusSize);
 
 	m_pDlgImage->ClearImage(false);
-
+	
 	m_pDlgImage->m_process.processImage(CRect(0, 0, eCHILD::WINDOW_WIDTH, eCHILD::WINDOW_HEIGHT));
 
 	Invalidate();
@@ -232,7 +240,7 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandom()
 	{
 		m_pDlgImage->ClearImage();
 		m_pDlgImage->m_process.UpdateRandomPos();
-		m_pDlgImage->m_process.processImage(CRect(0,0, eCHILD::WINDOW_WIDTH, eCHILD::WINDOW_HEIGHT));
+		m_pDlgImage->m_process.processImage(CRect(0, 0, eCHILD::WINDOW_WIDTH, eCHILD::WINDOW_HEIGHT));
 		m_pDlgImage->Invalidate();
 	}
 }
@@ -240,8 +248,11 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandom()
 
 int CMfcDrawCircleDlg::UpdateImageData(CRect rect, int index)
 {
-	for (int phase = 0; phase < PHASE_COUNT; ++phase)
+	while(m_nPhaseCount< PHASE_COUNT * THREAD_COUNT)
 	{
+		if (m_bStop_threads)
+			break;
+
 		if (m_nClearCount == 0)
 		{
 			m_pDlgImage->ClearImage();
@@ -250,8 +261,11 @@ int CMfcDrawCircleDlg::UpdateImageData(CRect rect, int index)
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME));  // 초기화 시간 예시		
 
+		if (m_bStop_threads)
+			break;
+
 		// 쓰레드 작업
-		std::cout << "Thread " << " index : " << index << " nClear : " << m_nClearCount << " 시작\n";
+		std::cout << "Thread " << " m_nPhaseCount : " << m_nPhaseCount << " nClear : " << m_nClearCount << " 시작\n";
 		
 		m_pDlgImage->m_process.processImage(rect);
 
@@ -265,6 +279,7 @@ int CMfcDrawCircleDlg::UpdateImageData(CRect rect, int index)
 			Invalidate();
 			UpdateWindow();
 		}
+		m_nPhaseCount++;
 	}
 
 	std::cout << "Thread " << index << " 종료\n";
@@ -283,6 +298,11 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandomThread()
 	// 랜덤 생성을 초당 2회, 총 10번 자동으로 반복합니다.
 	cout << "THREAD START!! " << endl;
 
+	std::lock_guard<std::mutex> lock(m_threadMtx);
+
+	m_bStop_threads = false;
+	m_nClearCount = 0;
+
 	int nImgSizeW = eCHILD::WINDOW_WIDTH / 2;
 	int nImgSizeH = eCHILD::WINDOW_HEIGHT / 2;
 
@@ -296,16 +316,31 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandomThread()
 	for (int k = 0; k < THREAD_COUNT; k++) {
 		rt[k] = rect;
 		rt[k].OffsetRect(nImgSizeW * (k % 2), nImgSizeH * int(k / 2));
-	}	
-
-	// 모든 쓰레드 생성
-	for (int i = 0; i < THREAD_COUNT; i++) {
-		m_vthreads.emplace_back(threadProcess, this, rt[i], &nRet[i], i);
 	}
 
-	// join
-	for (auto& th : m_vthreads) {
-		th.detach();
+	// 이미지 드로우우 중이면.. 아직 쓰레드가 사용중이면..
+	if (m_nPhaseCount !=0 && m_nPhaseCount < PHASE_COUNT * THREAD_COUNT)
+	{
+		m_nPhaseCount = 0;
+		cout << "THREAD continue" << endl;
+	}
+	// 이미지 드로우가 끝났으면.
+	else
+	{
+		cout << "THREAD restart " << endl;
+
+		m_nPhaseCount = 0;
+
+		m_vthreads.clear();
+
+		// 모든 쓰레드 생성
+		for (int i = 0; i < THREAD_COUNT; i++) {
+			m_vthreads.emplace_back(threadProcess, this, rt[i], &nRet[i], i);
+		}
+
+		for (auto& th : m_vthreads) {
+			th.detach();
+		}
 	}
 
 	int nSum = 0;
@@ -325,4 +360,6 @@ void CMfcDrawCircleDlg::OnDestroy()
 	CDialogEx::OnDestroy();
 
 	Clear();
+
+	m_bStop_threads = true;
 }
