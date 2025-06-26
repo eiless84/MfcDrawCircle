@@ -6,7 +6,7 @@ class CProcess : public CObject
 public:
 	CProcess();
 	virtual ~CProcess();
-	std::vector<CPoint> vPointData;
+	std::vector<CPoint> m_vPointData;
 	unsigned char* m_pImageData = NULL;	// DlgImage를 참조한다.
 
 	void ClearPoint();
