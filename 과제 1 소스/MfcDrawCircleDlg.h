@@ -38,8 +38,9 @@ protected:
 private:
 	CDlgImage* m_pDlgImage;
 	std::mutex m_mtx;
-	std::condition_variable cv;
+	std::condition_variable m_cvExecute;
 	int m_nPhase_number = 0;;
+	bool m_bStop_threads = false;
 	static BOOL WINAPI ConsoleHandler(DWORD dwCtrlType);
 	void Clear();
 

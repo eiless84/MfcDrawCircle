@@ -147,17 +147,17 @@ void CProcess::UpdateRandomPos()
 // CProcess 멤버 함수
 void CProcess::setPointData(CPoint pos)
 {
-	if (vPointData.size() > ePOINT::CIRCLE_ARRAY)
+	if (m_vPointData.size() > ePOINT::CIRCLE_ARRAY)
 		return;
 
-	vPointData.push_back(pos);
+	m_vPointData.push_back(pos);
 
-	cout << vPointData.size() << endl;
+	cout << m_vPointData.size() << endl;
 }
 
 int CProcess::getPointSize()
 {
-	return static_cast<int>(vPointData.size());
+	return static_cast<int>(m_vPointData.size());
 }
 
 CPoint CProcess::getPointData(int arrayNum)
@@ -166,22 +166,22 @@ CPoint CProcess::getPointData(int arrayNum)
 	if ( arrayNum >= ePOINT::CIRCLE_ARRAY)
 		return errorPoint;
 
-	if (vPointData.size() <= arrayNum)
+	if (m_vPointData.size() <= arrayNum)
 		return errorPoint;
 
-	//cout << "vPointData [ " << arrayNum << " ] " << vPointData[arrayNum].x << " , " << vPointData[arrayNum].y << endl;
+	//cout << "m_vPointData [ " << arrayNum << " ] " << m_vPointData[arrayNum].x << " , " << m_vPointData[arrayNum].y << endl;
 
-	return vPointData[arrayNum];
+	return m_vPointData[arrayNum];
 }
 
 CPoint CProcess::isPointCheck(CPoint pos, int nRadiusSize)
 {
 	CPoint errorPoint = CPoint(ePOINT::ERROR_PT, ePOINT::ERROR_PT);
 
-	if (vPointData.size() < ePOINT::CIRCLE_ARRAY)
+	if (m_vPointData.size() < ePOINT::CIRCLE_ARRAY)
 		return errorPoint;
 
-	for (auto &pointData : vPointData)
+	for (auto &pointData : m_vPointData)
 	{
 		if (isInCircle(pointData.x, pointData.y, pos.x, pos.y, nRadiusSize+2))
 		{
@@ -198,7 +198,7 @@ CPoint CProcess::isPointCheck(CPoint pos, int nRadiusSize)
 
 void CProcess::ClearPoint()
 {
-	vPointData.clear();
+	m_vPointData.clear();
 }
 
 bool CProcess::isInCircle(int nX, int nY, int cx, int cy, int nRadius)

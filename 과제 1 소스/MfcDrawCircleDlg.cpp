@@ -237,18 +237,18 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandom()
 	}
 }
 
-bool stop_threads = false;
+
 int CMfcDrawCircleDlg::UpdateImageData(CRect rect, int index)
 {
 	int local_phase = 0;	
-	stop_threads = false;
+	m_bStop_threads = false;
 
 	while (true) {
 		{
 			std::unique_lock<std::mutex> lock(m_mtx);
-			cv.wait(lock, [&] { return (local_phase < m_nPhase_number) || stop_threads; });
+			m_cvExecute.wait(lock, [&] { return (local_phase < m_nPhase_number) || m_bStop_threads; });
 
-			if (stop_threads) break;
+			if (m_bStop_threads) break;
 		}
 
 		// 쓰레드 작업
@@ -315,7 +315,7 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandomThread()
 			std::lock_guard<std::mutex> lock(m_mtx);
 			m_nPhase_number++;
 		}
-		cv.notify_all();
+		m_cvExecute.notify_all();
 		
 		Invalidate();
 		UpdateWindow();
@@ -330,14 +330,14 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandomThread()
 	// 종료
 	{
 		std::lock_guard<std::mutex> lock(m_mtx);
-		stop_threads = true;
+		m_bStop_threads = true;
 	}
-	cv.notify_all();
+	m_cvExecute.notify_all();
 
 	// join
 	for (auto& th : threads) {
 		if (th.joinable()) {
-			th.join();
+			th.detach();
 		}
 	}
 
