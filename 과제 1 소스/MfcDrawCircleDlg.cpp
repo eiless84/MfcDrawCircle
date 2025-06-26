@@ -240,24 +240,31 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandom()
 
 int CMfcDrawCircleDlg::UpdateImageData(CRect rect, int index)
 {
-	int local_phase = 0;	
-	m_bStop_threads = false;
-
-	while (true) {
+	for (int phase = 0; phase < PHASE_COUNT; ++phase)
+	{
+		if (m_nClearCount == 0)
 		{
-			std::unique_lock<std::mutex> lock(m_mtx);
-			m_cvExecute.wait(lock, [&] { return (local_phase < m_nPhase_number) || m_bStop_threads; });
-
-			if (m_bStop_threads) break;
+			m_pDlgImage->ClearImage();
+			m_pDlgImage->m_process.UpdateRandomPos();
 		}
 
-		// 쓰레드 작업
-		std::cout << "Thread " << index << " 시작\n";
-		m_pDlgImage->m_process.processImage(rect);
-		//_pDlgImage->Invalidate();
+		std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME));  // 초기화 시간 예시		
 
-		//std::this_thread::sleep_for(std::chrono::milliseconds(100));  // 작업
-		++local_phase;
+		// 쓰레드 작업
+		std::cout << "Thread " << " index : " << index << " nClear : " << m_nClearCount << " 시작\n";
+		
+		m_pDlgImage->m_process.processImage(rect);
+
+		auto end = system_clock::now();
+		auto millisec = duration_cast<milliseconds>(end - m_timeBegin);
+		cout << "\t" << millisec.count() * 0.001 << "sec" << endl;
+		++m_nClearCount;
+		if (m_nClearCount >= THREAD_COUNT)
+		{
+			m_nClearCount = 0;
+			Invalidate();
+			UpdateWindow();
+		}
 	}
 
 	std::cout << "Thread " << index << " 종료\n";
@@ -275,70 +282,30 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandomThread()
 	// 쓰레드로 자동 생성합니다.
 	// 랜덤 생성을 초당 2회, 총 10번 자동으로 반복합니다.
 	cout << "THREAD START!! " << endl;
-	m_nPhase_number = 0;
 
 	int nImgSizeW = eCHILD::WINDOW_WIDTH / 2;
 	int nImgSizeH = eCHILD::WINDOW_HEIGHT / 2;
 
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	auto start = system_clock::now();
+	m_timeBegin = system_clock::now();
 	CRect rect(0, 0, nImgSizeW, nImgSizeH);
 
 	CRect rt[THREAD_COUNT];
 	int nRet[THREAD_COUNT];
+
 	for (int k = 0; k < THREAD_COUNT; k++) {
 		rt[k] = rect;
 		rt[k].OffsetRect(nImgSizeW * (k % 2), nImgSizeH * int(k / 2));
-	}
-
-	std::vector<std::thread> threads;
+	}	
 
 	// 모든 쓰레드 생성
 	for (int i = 0; i < THREAD_COUNT; i++) {
-		threads.emplace_back(threadProcess, this, rt[i], &nRet[i], i);
+		m_vthreads.emplace_back(threadProcess, this, rt[i], &nRet[i], i);
 	}
-
-	start = system_clock::now();
-	for (int phase = 0; phase < PHASE_COUNT; ++phase) {
-		// 초기화
-		std::cout << "=== Phase " << phase << " 초기화 ===\n";
-		std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME));  // 초기화 시간 예시
-		std::cout << "=== Phase " << phase << " 초기화 완료 ===\n";
-		m_pDlgImage->ClearImage();
-		m_pDlgImage->m_process.UpdateRandomPos();
-
-		// 0.5초 대기
-		//std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME));
-
-		// phase 증가 + 쓰레드 깨움
-		{
-			std::lock_guard<std::mutex> lock(m_mtx);
-			m_nPhase_number++;
-		}
-		m_cvExecute.notify_all();
-		
-		Invalidate();
-		UpdateWindow();
-
-		auto end = system_clock::now();
-		auto millisec = duration_cast<milliseconds>(end - start);
-
-		cout << m_nPhase_number << "\t" << millisec.count() * 0.001 << "sec" << endl;
-		std::cout << "=== UpdateWindow 완료 ===\n";
-	}
-
-	// 종료
-	{
-		std::lock_guard<std::mutex> lock(m_mtx);
-		m_bStop_threads = true;
-	}
-	m_cvExecute.notify_all();
 
 	// join
-	for (auto& th : threads) {
-		if (th.joinable()) {
-			th.detach();
-		}
+	for (auto& th : m_vthreads) {
+		th.detach();
 	}
 
 	int nSum = 0;
@@ -347,7 +314,7 @@ void CMfcDrawCircleDlg::OnBnClickedBtnInitRandomThread()
 	}
 
 	auto end = system_clock::now();
-	auto millisec = duration_cast<milliseconds>(end - start);
+	auto millisec = duration_cast<milliseconds>(end - m_timeBegin);
 
 	cout << nSum << "\t" << millisec.count() * 0.001 << "sec" << endl;
 	cout << "THREAD END!! " << endl;

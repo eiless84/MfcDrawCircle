@@ -37,10 +37,10 @@ protected:
 
 private:
 	CDlgImage* m_pDlgImage;
-	std::mutex m_mtx;
-	std::condition_variable m_cvExecute;
-	int m_nPhase_number = 0;;
+	std::vector<std::thread> m_vthreads;
 	bool m_bStop_threads = false;
+	volatile int m_nClearCount = 0;
+	std::chrono::time_point<std::chrono::system_clock> m_timeBegin;
 	static BOOL WINAPI ConsoleHandler(DWORD dwCtrlType);
 	void Clear();
 
