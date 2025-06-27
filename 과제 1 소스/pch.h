@@ -9,7 +9,9 @@
 
 // 여기에 미리 컴파일하려는 헤더 추가
 #include "framework.h"
+#include <format>
 #include "iostream"
+#include <fstream>
 #include <windows.h>
 #include <vector>
 #include <algorithm>
@@ -17,7 +19,7 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
-
+#include <iomanip>
 
 /// <summary>
 /// #enum
@@ -66,8 +68,8 @@ struct stDoublePos {
 };
 
 /// <summary>
-/// utin Function
+/// util Function
 /// </summary>
 std::vector<int> generateUniqueRandom(int min, int max);
-
+void showOverTime(std::chrono::time_point<std::chrono::system_clock> timeBegin);
 #endif //PCH_H

@@ -3,6 +3,7 @@
 #include "pch.h"
 
 using namespace std;
+using namespace chrono;
 // 미리 컴파일된 헤더를 사용하는 경우 컴파일이 성공하려면 이 소스 파일이 필요합니다.
 std::vector<int> generateUniqueRandom(int min, int max)
 {
@@ -18,4 +19,15 @@ std::vector<int> generateUniqueRandom(int min, int max)
     std::shuffle(values.begin(), values.end(), gen);
 
     return values;
+}
+
+// 경과 시간 표시
+void showOverTime(std::chrono::time_point<std::chrono::system_clock> timeBegin)
+{
+    auto end = system_clock::now();
+    auto millisec = duration_cast<milliseconds>(end - timeBegin);
+
+    cout << endl;
+    cout << "지난시간 \t" << millisec.count() * 0.001 << "sec" << endl;
+    cout << endl;
 }

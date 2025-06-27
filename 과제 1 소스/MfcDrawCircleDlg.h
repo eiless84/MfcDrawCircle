@@ -39,12 +39,14 @@ private:
 	CDlgImage* m_pDlgImage;
 	std::vector<std::thread> m_vthreads;
 	std::mutex m_threadMtx;
-	volatile bool m_bStop_threads = false;
+	std::atomic<bool> m_bStop_threads = false;
+	volatile int m_nEndThreads = 0;
 	volatile int m_nClearCount = 0;
 	volatile int m_nPhaseCount = 0;
 	std::chrono::time_point<std::chrono::system_clock> m_timeBegin;
 	static BOOL WINAPI ConsoleHandler(DWORD dwCtrlType);
 	void Clear();
+	void DestroyThread();
 
 public:
 	int nRadiusSize;
