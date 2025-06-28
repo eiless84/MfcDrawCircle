@@ -22,12 +22,20 @@ std::vector<int> generateUniqueRandom(int min, int max)
 }
 
 // 경과 시간 표시
-void showOverTime(std::chrono::time_point<std::chrono::system_clock> timeBegin)
+std::chrono::milliseconds computeOverTime(std::chrono::time_point<std::chrono::steady_clock> timeBegin, const char* pchText)
 {
-    auto end = system_clock::now();
-    auto millisec = duration_cast<milliseconds>(end - timeBegin);
+    auto end = std::chrono::steady_clock::now();
+    auto millisec = std::chrono::duration_cast<std::chrono::milliseconds>(end - timeBegin);
 
-    cout << endl;
-    cout << "지난시간 \t" << millisec.count() * 0.001 << "sec" << endl;
-    cout << endl;
+    /*
+    // 절대 현재 시스템 시간 출력
+    auto sys_now = std::chrono::system_clock::now();
+    std::time_t now_c = std::chrono::system_clock::to_time_t(sys_now);
+    char buffer[255] = { 0 };
+    ctime_s(buffer, 255, &now_c);
+    std::cout << "현재 시간:  " << buffer << std::endl;
+    */
+
+    std::cout << pchText << millisec.count() << " ms" << std::endl;
+    return millisec;
 }

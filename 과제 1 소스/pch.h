@@ -17,9 +17,8 @@
 #include <algorithm>
 #include <random>
 #include <chrono>
-#include <thread>
-#include <mutex>
 #include <iomanip>
+#include <ctime>
 
 /// <summary>
 /// #enum
@@ -28,25 +27,19 @@ enum ePARENT {
 	FULL_WIDTH = 1280,
 	FULL_HEIGHT = 800,
 };
+
 enum eCHILD 
 {
 	WINDOW_WIDTH = 1024,
 	WINDOW_HEIGHT = 768,
 };
+
 enum ePOINT
 {
 	ERROR_PT = -9999,
 	CIRCLE_ARRAY = 3,
 	POINT_MAX = 10000,
 };
-
-enum eCIRCLE
-{
-	RADIUS = 4,
-};
-
-const int THREAD_COUNT = 4;			// 스레드 갯수 4사 분면을 그리기 위해서 4개
-const int PHASE_COUNT = 10;			// 쓰레드 실행 반복 횟수
 
 /// <summary>
 /// #define
@@ -56,7 +49,7 @@ const int PHASE_COUNT = 10;			// 쓰레드 실행 반복 횟수
 #define COLOR_GREEN RGB(0, 0xff, 0)
 #define COLOR_BLUE	RGB(0, 0, 0xff)
 #define COR_GRAY	128
-#define WAIT_TIME 500	// ms
+#define COR_WHITE	255
 
 /// <summary>
 /// struct
@@ -71,5 +64,5 @@ struct stDoublePos {
 /// util Function
 /// </summary>
 std::vector<int> generateUniqueRandom(int min, int max);
-void showOverTime(std::chrono::time_point<std::chrono::system_clock> timeBegin);
+std::chrono::milliseconds computeOverTime(std::chrono::time_point<std::chrono::steady_clock> timeBegin, const char* pchText = "경과시간");
 #endif //PCH_H

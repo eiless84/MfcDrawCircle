@@ -97,6 +97,7 @@ void CDlgImage::ClearImage(bool bIsClearPoint)
 
 	m_process.SetImageData(fm);
 	m_process.setPitch(nPitch);
+	m_process.clearDate();
 }
 
 void CDlgImage::OnLButtonDown(UINT nFlags, CPoint point)
