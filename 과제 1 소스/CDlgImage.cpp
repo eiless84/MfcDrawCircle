@@ -16,6 +16,27 @@ CDlgImage::CDlgImage(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_DlgImageChild, pParent)
 {
 	m_pParent = pParent;
+
+	// 이미지 생성
+	int Width = eCHILD::WINDOW_WIDTH;
+	int Height = eCHILD::WINDOW_HEIGHT;
+	
+	if (m_Image.IsNull())
+	{
+		m_Image.Create(Width, -Height, m_Bpp);  // top-down
+
+		if (m_Bpp == 8) {
+			static RGBQUAD rgb[256];
+			for (int i = 0; i < 256; i++)
+				rgb[i].rgbRed = rgb[i].rgbGreen = rgb[i].rgbBlue = i;
+			m_Image.SetColorTable(0, 256, rgb);
+		}
+
+		int pitch = m_Image.GetPitch();
+		// 배경을 하얗게 초기화 (직접 픽셀 접근)
+		unsigned char* pBits = (unsigned char*)m_Image.GetBits();
+		memset(pBits, WHITE_COLOR, pitch * Height);
+	}
 }
 
 CDlgImage::~CDlgImage()
@@ -33,6 +54,7 @@ BEGIN_MESSAGE_MAP(CDlgImage, CDialogEx)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 
@@ -41,63 +63,77 @@ BOOL CDlgImage::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// TODO:  여기에 추가 초기화 작업을 추가합니다.
 	MoveWindow(0, 0, eCHILD::WINDOW_WIDTH, eCHILD::WINDOW_HEIGHT);
 
-	InitImage();
-	
-
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// 예외: OCX 속성 페이지는 FALSE를 반환해야 합니다.
 }
 
 void CDlgImage::OnPaint()
 {
-	CPaintDC dc(this); // device context for painting
-	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
-	// 그리기 메시지에 대해서는 CDialogEx::OnPaint()을(를) 호출하지 마십시오.
+	CPaintDC dc(this); // 화면 DC
 
-	if (m_Image) {
-		m_Image.Draw(dc, 0, 0);
-	}
-}
+	CRect rect;
+	GetClientRect(&rect);
 
-void CDlgImage::InitImage()
-{
-	int nWidth = eCHILD::WINDOW_WIDTH;	// 4096 * 5;
-	int nHeight = eCHILD::WINDOW_HEIGHT;	// 4096 * 5;
-	int nBpp = 8;
-
-	m_Image.Create(nWidth, -nHeight, nBpp);
-
-	if (nBpp == 8) {
+	int width = rect.Width();
+	int height = rect.Height();
+	int pitch = m_Image.GetPitch();
+	
+	CImage backBuffer;
+	backBuffer.Create(width, -height, 8);	// bpp = 8
+	if (m_Bpp == 8) {
 		static RGBQUAD rgb[256];
 		for (int i = 0; i < 256; i++)
 			rgb[i].rgbRed = rgb[i].rgbGreen = rgb[i].rgbBlue = i;
-		m_Image.SetColorTable(0, 256, rgb);
+		backBuffer.SetColorTable(0, 256, rgb);
 	}
 
-	ClearImage();
+	CDC* pMemDC = CDC::FromHandle(backBuffer.GetDC());	// 백퍼버 이미지의 DC 얻기
+	
+	pMemDC->FillSolidRect(rect, COLOR_WHITE);  // 배경 초기화
+
+	if (!m_Image.IsNull())
+	{
+		unsigned char* fm = (unsigned char*)m_Image.GetBits();
+		unsigned char* frameBuffer = (unsigned char*)m_process.GetFrameBuffer();
+
+		if (frameBuffer[0] != NULL)
+			memcpy(fm, frameBuffer, pitch * height);
+		
+		m_Image.Draw(*pMemDC, 0, 0);
+	}
+
+	// 백 버퍼를 화면에 복사
+	backBuffer.ReleaseDC();  // DC 사용 종료
+	backBuffer.BitBlt(dc.m_hDC, 0, 0); // 전체를 한 번에 출력
+
+	backBuffer.Destroy();  // 백 버퍼 제거 (필수)	// 자주 호출될시 문제 생길수 있다.
 }
 
-void CDlgImage::ClearImage(bool bIsClearPoint)
+void CDlgImage::SetImageSize(int width, int height)
 {
-	//std::cout << "CELAR IMAGE \n";
-	int nWidth = m_Image.GetWidth();
-	int nHeight = m_Image.GetHeight();
-	int nBpp = 8;
+	// set Image
+	m_process.SetImageSize(width, height, m_Bpp);
+}
 
-	int nPitch = m_Image.GetPitch();
-	unsigned char* fm = (unsigned char*)m_Image.GetBits();
+void CDlgImage::ClearData()
+{
+	m_process.ClearData();
+}
 
-	memset(fm, 0xff, nWidth * nHeight);	// 0xff WHITE
+void CDlgImage::UpdateRandomPos()
+{
+	m_process.UpdateRandomPos();
+}
 
-	if(bIsClearPoint)
-		m_process.ClearPoint();
+void CDlgImage::ProcessData(CRect rect)
+{
+	m_process.ProcessData(rect);
+}
 
-	m_process.SetImageData(fm);
-	m_process.setPitch(nPitch);
-	m_process.clearDate();
+void CDlgImage::SetRadiusSize(int size)
+{
+	m_process.SetRadiusSize(size);
 }
 
 void CDlgImage::OnLButtonDown(UINT nFlags, CPoint point)
@@ -112,12 +148,10 @@ void CDlgImage::OnLButtonDown(UINT nFlags, CPoint point)
 
 	m_bDragging = true;
 
-	m_process.setPointData(point);
+	m_process.SetPointData(point);
 
 	CRect rect(0, 0, nWidth, nHeight);
-	m_process.processImage(rect);
-
-	Invalidate();
+	m_process.ProcessData(rect);
 
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
@@ -135,20 +169,25 @@ void CDlgImage::OnMouseMove(UINT nFlags, CPoint point)
 	if (m_bDragging)
 	{
 		// 이 함수 내부에서 point값을 갱신해줍니다.
-		CPoint dragPoint = m_process.isPointCheck(point, m_process.GetRadiusSize());
+		CPoint dragPoint = m_process.IsPointCheck(point, m_process.GetRadiusSize());
 
 		// 영역에 들어온 경우
 		if (dragPoint.x != ePOINT::ERROR_PT)
 		{
 			//cout << "영역에 들어왔다!! 마우스 값 갱신해주기 " << endl;
-			ClearImage(false);
 			int nWidth = m_Image.GetWidth();
 			int nHeight = m_Image.GetHeight();
 			CRect rect(0, 0, nWidth, nHeight);
-			m_process.processImage(rect);
-			Invalidate();
+			m_process.ProcessData(rect);
 		}
 	}
 
 	CDialogEx::OnMouseMove(nFlags, point);
+}
+
+BOOL CDlgImage::OnEraseBkgnd(CDC* pDC)
+{
+	// 기본 배경 지우기 막음
+	return TRUE;
+	//return CDialogEx::OnEraseBkgnd(pDC);
 }

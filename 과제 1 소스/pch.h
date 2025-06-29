@@ -48,8 +48,10 @@ enum ePOINT
 #define COLOR_RED	RGB(0xff, 0, 0)
 #define COLOR_GREEN RGB(0, 0xff, 0)
 #define COLOR_BLUE	RGB(0, 0, 0xff)
-#define COR_GRAY	128
-#define COR_WHITE	255
+#define COLOR_WHITE	RGB(0xff, 0xff, 0xff)
+#define BLACK_COLOR	0
+#define GRAY_COLOR	128
+#define WHITE_COLOR	255
 
 /// <summary>
 /// struct

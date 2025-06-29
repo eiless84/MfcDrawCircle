@@ -11,14 +11,19 @@ class CDlgImage : public CDialogEx
 public:
 	CDlgImage(CWnd* pParent = nullptr);   // 표준 생성자입니다.
 	virtual ~CDlgImage();
-	void ClearImage(bool bIsClearPoint = true);
-	CImage m_Image;
-	CProcess m_process;
+	//	CProcess Class
+	void	SetImageSize(int width, int height);
+	void	ClearData();
+	void	UpdateRandomPos();
+	void	ProcessData(CRect rect);
+	void	SetRadiusSize(int size);
 
 private:	
 	CWnd* m_pParent;
-	bool m_bDragging = false;	
-	void InitImage();
+	bool m_bDragging = false;
+	CProcess m_process;
+	CImage	m_Image;
+	int	m_Bpp = 8;
 
 // 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
@@ -37,4 +42,5 @@ public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 };

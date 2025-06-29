@@ -10,6 +10,7 @@ using namespace std;
 // CProcess
 CProcess::CProcess()
 {
+	memset(m_frameBuffer, WHITE_COLOR, m_nPitch * m_nHeight);
 }
 
 CProcess::~CProcess()
@@ -31,7 +32,7 @@ int CProcess::GetRadiusSize()
 	return m_nRadiusSize;
 }
 
-int CProcess::GetThickness(int Radius)
+int CProcess::getThickness(int Radius)
 {
 	int nRadius = Radius - eCIRCLE::THICKNESS;
 	if (nRadius <0)
@@ -41,18 +42,23 @@ int CProcess::GetThickness(int Radius)
 	return nRadius;
 }
 
-void CProcess::SetImageData(unsigned char* pImageData)
+void CProcess::SetImageSize(int width, int height, int bpp)
 {
-	m_pImageData = pImageData;
+	m_nWidth = width;
+	m_nHeight = height;	
+	//
+	m_nBpp = bpp;
+	m_nBpp = 32;
+
+	m_nPitch = ((width * bpp + 31) / 32) * 4;;
 }
 
-void CProcess::setPitch(int pitch)
+void CProcess::ClearData()
 {
-	m_nPitch = pitch;
-}
+	if(m_nPitch!=0)
+		memset(m_frameBuffer, WHITE_COLOR, m_nPitch * m_nHeight);
 
-void CProcess::clearDate()
-{
+	m_vPointData.clear();
 	m_vComputeCirclePos.clear();
 	m_nComputeRadius = 0;
 }
@@ -67,8 +73,8 @@ void CProcess::processPoint(CRect rect)
 		CRect pointRect(CP.x, CP.y, CP.x + CPSize.x, CP.y + CPSize.y);
 		if (isIntersectRect(rect, pointRect))
 		{
-			int nInnerThickness = GetThickness(0);	// 원이 작기 때문에 0부터 전부 그립니다.
-			UpdateCircle(m_pImageData, CP.x, CP.y, GetRadiusSize(), COR_GRAY/2, rect, nInnerThickness);
+			int nInnerThickness = getThickness(0);	// 원이 작기 때문에 0부터 전부 그립니다.
+			updateCircle(CP.x, CP.y, GetRadiusSize(), GRAY_COLOR /2, rect, nInnerThickness);
 		}
 	}
 }
@@ -105,13 +111,13 @@ void CProcess::processCombine(CRect rect)
 		CRect pointRect(CP.x, CP.y, CP.x + CPSize.x, CP.y + CPSize.y);
 		if (isIntersectRect(rect, pointRect))
 		{
-			int nInnerThickness = GetThickness(m_nComputeRadius - THICKNESS);	// 원이 작기 때문에 0부터 전부 그립니다.
-			UpdateCircle(m_pImageData, m_vComputeCirclePos[0].x, m_vComputeCirclePos[0].y, m_nComputeRadius, COR_GRAY, rect, nInnerThickness);
+			int nInnerThickness = getThickness(m_nComputeRadius - THICKNESS);	// 원이 작기 때문에 0부터 전부 그립니다.
+			updateCircle(m_vComputeCirclePos[0].x, m_vComputeCirclePos[0].y, m_nComputeRadius, GRAY_COLOR, rect, nInnerThickness);
 		}
 	}
 }
 
-void CProcess::processImage(CRect rect)
+void CProcess::ProcessData(CRect rect)
 {
 	std::cout << "==== CProcess::processImage :: 업데이트 =====\n";
 
@@ -129,14 +135,18 @@ void CProcess::UpdateRandomPos()
 
 	for (int i = 0; i < ePOINT::CIRCLE_ARRAY; i++)
 	{
-		setPointData(CPoint(vRandomX[i] - GetRadiusSize()/2, vRandomY[i] - GetRadiusSize()/2));
+		SetPointData(CPoint(vRandomX[i] - GetRadiusSize()/2, vRandomY[i] - GetRadiusSize()/2));
 	}
 
 	std::cout << "==== CProcess::UpdateRandomPos :: 완료 =====\n";
 }
 
-// CProcess 멤버 함수
-void CProcess::setPointData(CPoint pos)
+const char* CProcess::GetFrameBuffer()
+{
+	return m_frameBuffer;
+}
+
+void CProcess::SetPointData(CPoint pos)
 {
 	if (m_vPointData.size() > ePOINT::CIRCLE_ARRAY)
 		return;
@@ -160,12 +170,12 @@ CPoint CProcess::getPointData(int arrayNum)
 	if (m_vPointData.size() <= arrayNum)
 		return errorPoint;
 
-	cout << "m_vPointData [ " << arrayNum << " ] " << m_vPointData[arrayNum].x << " , " << m_vPointData[arrayNum].y << endl;
+	//cout << "m_vPointData [ " << arrayNum << " ] " << m_vPointData[arrayNum].x << " , " << m_vPointData[arrayNum].y << endl;
 
 	return m_vPointData[arrayNum];
 }
 
-CPoint CProcess::isPointCheck(CPoint pos, int nRadiusSize)
+CPoint CProcess::IsPointCheck(CPoint pos, int nRadiusSize)
 {
 	CPoint errorPoint = CPoint(ePOINT::ERROR_PT, ePOINT::ERROR_PT);
 
@@ -174,25 +184,21 @@ CPoint CProcess::isPointCheck(CPoint pos, int nRadiusSize)
 
 	for (auto &pointData : m_vPointData)
 	{
-		int nInnerThickness = GetThickness(nRadiusSize);
+		int nInnerThickness = getThickness(nRadiusSize);
 		int nCollisizeSize = nRadiusSize + 2;
 		if (isInCircle(pointData.x, pointData.y, pos.x, pos.y, nCollisizeSize, nInnerThickness))
 		{
-			//cout << "isPointCheck TRUE : " << pointData.x << " , " << pointData.y << endl;
+			//cout << "IsPointCheck TRUE : " << pointData.x << " , " << pointData.y << endl;
 			// 기존 값을 갱신해 줍니다.
 			pointData = pos;
 			return pointData;
 		}
 	}
 
-	cout << "isPointCheck FALSE !!! " << endl;
+	cout << "IsPointCheck FALSE !!! " << endl;
 	return errorPoint;
 }
 
-void CProcess::ClearPoint()
-{
-	m_vPointData.clear();
-}
 bool CProcess::isIntersectRect(CRect Rect1, CRect Rect2)
 {
 	CRect IntersectRect;
@@ -265,8 +271,7 @@ bool CProcess::calcCircle(const CPoint& p1, const CPoint& p2, const CPoint& p3, 
 	return true;
 }
 
-
-void CProcess::UpdateCircle(unsigned char* fm, int x, int y, int nRadius, int nCoror, RECT rectArea, int nThickness)
+void CProcess::updateCircle(int x, int y, int nRadius, int nCoror, RECT rectArea, int nThickness)
 {
 	//std::cout << "=========== UpdateCircle START ===========" << endl;
 	int fullHeight = rectArea.bottom;
@@ -289,7 +294,7 @@ void CProcess::UpdateCircle(unsigned char* fm, int x, int y, int nRadius, int nC
 			if (isInCircle(i, j, nCenterX, nCenterY, nRadius, nThickness)) {
 				int totalArray = j * m_nPitch + i;
 				if (totalArray >= 0 && totalArray < fullHeight * m_nPitch) {
-					fm[totalArray] = nCoror;
+					m_frameBuffer[totalArray] = nCoror;
 				}
 			}
 		}

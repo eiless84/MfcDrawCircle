@@ -58,6 +58,7 @@ private:
 	void CreateThread();				// 비동기 쓰레드 생성
 	void DestroyThread();
 	void RequestRandomCircle(int nPhaseCount=0, int nPhaseMaximum=10, int nWaitTimeMS=500);
+
 public:
 	int nRadiusSize;
 	afx_msg void OnBnClickedBtnInitCircle();
@@ -65,5 +66,5 @@ public:
 	afx_msg void OnBnClickedBtnInitRandomThread();
 	afx_msg void OnDestroy();
 	afx_msg void OnBnClickedBtnRadiusOk();
-	afx_msg void OnUpdateUIState(UINT /*nAction*/, UINT /*nUIElement*/);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
